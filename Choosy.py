@@ -7,10 +7,13 @@ import json
 
 stngs = {"AllowVeg": False}
 
+#DAYS = {DAY : VegetarianState}
 DAYS = {"SUNDAY" : False, "MONDAY" : False, "TUESDAY" : False, "WEDNESDAY" : False, "THURSDAY" : False, "FRIDAY" : False, "SATURDAY" : False}
+#meals = {Meal name : [VegetarianMealState, [[Ingredient 1, Amount of Ingredient 1], [Ingredient 2, Amount of Ingredient 2], ..., [Ingredient n, Amount of Ingredient n]]]}
 meals = {}
 
-
+# Settings maintains options about the days.
+# It saves these settings in Resources/options.json
 def settings():
     def onCheck(days, i, boolVar):
         DAYS[days[i]] = boolVar.get()
@@ -52,6 +55,7 @@ def settings():
     ttk.Button(window, text="OK", command=OK).grid(column=6, row=9)
     ttk.Button(window, text="Apply", command=Apply).grid(column=7, row=9, sticky=W)
 
+# addMeal makes sure there's a name in the text box before allowing ingredients to be added.
 def addMeal():
     def OK():
         error.destroy()
@@ -65,6 +69,8 @@ def addMeal():
         name.set("")
         addIngredients(n)
 
+# addIngredients handles adding as many ingredients as needed for a meal and setting whether it's vegetarian.
+# Then it adds the meal to meals. It saves meals in Resources/meals.json
 def addIngredients(n):
     def OK(ings, amnts):
         meals[n] = []
@@ -131,11 +137,13 @@ def addIngredients(n):
     ttk.Button(window, text="Cancel", command=Cancel).pack(side=RIGHT)
     ttk.Button(window, text="OK", command=lambda ings=ings, amnts=amts : OK(ings, amnts)).pack(side=RIGHT)
 
-
+# mealPlan creates a random meal plan from the saved meals.
 def mealPlan():
     def OK():
         window.destroy()
 
+    # gList takes the meal plan created by mealPlan and uses meals' ingredient
+    # lists to create a grocery list for the entire meal plan
     def gList():
         def gOK():
             grocer.destroy()
@@ -234,6 +242,7 @@ def mealPlan():
     ttk.Button(window, text="OK", command=OK).grid(column=7, row=6)
     ttk.Button(window, text="Grocery List", command=gList).grid(column=6, row=6)
 
+# Check whether meals.json exists and options.json exists
 try:
     with open('Resources/meals.json', 'r') as openfile:
         meals = json.load(openfile)
@@ -250,6 +259,7 @@ except IOError as error:
     pass
     print("Options file doesn't exist. Will create when options are applied.")
 
+# Create the main UI
 root = Tk()
 root.iconbitmap("Resources/icon.ico")
 root.title("Choosy")
