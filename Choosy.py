@@ -5,11 +5,6 @@ from tkinter import ttk
 import random
 import json
 
-# ADD CANCEL BUTTON TO ADD MEAL SCREEN
-# TRACK DOWN BUG WHERE CANCELING ADD MEAL CAUSES MEAL PLAN TO CRASH
-# ABOVE BUG WILL PROBABLY BE SOLVED BY DELETING meals[n] WHEN CANCELING
-# OR BY MOVING meals[n] = [] TO OK FUNCTION
-
 stngs = {"AllowVeg": False}
 
 DAYS = {"SUNDAY" : False, "MONDAY" : False, "TUESDAY" : False, "WEDNESDAY" : False, "THURSDAY" : False, "FRIDAY" : False, "SATURDAY" : False}
