@@ -12,7 +12,7 @@ Additional planned features:
 
 Run choosy.py or download choosy.exe (not yet released). Make sure choosy.py is in the same folder as the Resources folder.
 
-Type a meal name in the text box and click Add Meal. Add ingredients to your meal by filling in the text box.
+Type a meal name in the text box and click Add Meal. Add ingredients to your meal by filling in the text boxes.
 Use the Add/Remove Ingredient buttons to add more text boxes. Check the Vegetarian box if the meal is vegetarian.
 Click OK to save the meal or Cancel to go back.
 
