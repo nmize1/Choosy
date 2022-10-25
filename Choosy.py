@@ -12,6 +12,14 @@ DAYS = {"SUNDAY" : False, "MONDAY" : False, "TUESDAY" : False, "WEDNESDAY" : Fal
 #meals = {Meal name : [VegetarianMealState, [[Ingredient 1, Amount of Ingredient 1], [Ingredient 2, Amount of Ingredient 2], ..., [Ingredient n, Amount of Ingredient n]]]}
 meals = {}
 
+#helper function
+def isFloat(n):
+    try:
+        float(n)
+        return True
+    except ValueError:
+        return False
+
 # Settings maintains options about the days.
 # It saves these settings in Resources/options.json
 def settings():
@@ -72,13 +80,17 @@ def addMeal():
 # addIngredients handles adding as many ingredients as needed for a meal and setting whether it's vegetarian.
 # Then it adds the meal to meals. It saves meals in Resources/meals.json
 def addIngredients(n):
+
+    def IsNum(S):
+        return isFloat(S)
+
     def OK(ings, amnts):
         meals[n] = []
         meals[n].append(vegVar.get())
 
         ingredients = []
         for i in range(len(ings)):
-            ingredients.append(tuple((ings[i].get(), amnts[i].get())))
+            ingredients.append(tuple((ings[i].get(), float(amnts[i].get()))))
 
         meals[n].append(ingredients)
         print(meals)
@@ -93,7 +105,8 @@ def addIngredients(n):
         en = ttk.Entry(entryFrame)
         en.grid(column=0, row=i.get(), padx=10, pady=1)
         ings.append(en)
-        en = ttk.Entry(entryFrame)
+        en = ttk.Entry(entryFrame, validate="key")
+        en['validatecommand'] = (en.register(isNum),'%P')
         en.grid(column=1, row=i.get(), padx=10, pady=1)
         amts.append(en)
         i.set(i.get() + 1)
@@ -129,7 +142,8 @@ def addIngredients(n):
     en = ttk.Entry(entryFrame)
     en.grid(column=0, row=2, padx=10, pady=1)
     ings.append(en)
-    en = ttk.Entry(entryFrame)
+    en = ttk.Entry(entryFrame, validate="key")
+    en['validatecommand'] = (en.register(IsNum), '%P')
     en.grid(column=1, row=2, padx=10, pady=1)
     amts.append(en)
 
@@ -155,7 +169,7 @@ def mealPlan():
                 for i in range(len(meals[meal][1])):
                     helper = meals[meal][1][i]
                     ingredient = helper[0]
-                    amt = int(helper[1])
+                    amt = helper[1]
                     if ingredient in lst:
                         lst[ingredient] = lst[ingredient] + amt
                     else:
