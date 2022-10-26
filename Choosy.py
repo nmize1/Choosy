@@ -4,6 +4,7 @@ from tkinter import *
 from tkinter import ttk
 import random
 import json
+import Resources.helper as helper
 
 stngs = {"AllowVeg": False}
 
@@ -11,14 +12,6 @@ stngs = {"AllowVeg": False}
 DAYS = {"SUNDAY" : False, "MONDAY" : False, "TUESDAY" : False, "WEDNESDAY" : False, "THURSDAY" : False, "FRIDAY" : False, "SATURDAY" : False}
 #meals = {Meal name : [VegetarianMealState, [[Ingredient 1, Amount of Ingredient 1], [Ingredient 2, Amount of Ingredient 2], ..., [Ingredient n, Amount of Ingredient n]]]}
 meals = {}
-
-#helper function
-def isFloat(n):
-    try:
-        float(n)
-        return True
-    except ValueError:
-        return False
 
 # Settings maintains options about the days.
 # It saves these settings in Resources/options.json
@@ -80,9 +73,8 @@ def addMeal():
 # addIngredients handles adding as many ingredients as needed for a meal and setting whether it's vegetarian.
 # Then it adds the meal to meals. It saves meals in Resources/meals.json
 def addIngredients(n):
-
     def isNum(S):
-        return isFloat(S)
+        return helper.isFloat(S)
 
     def OK(ings, amnts):
         meals[n] = []
@@ -90,7 +82,10 @@ def addIngredients(n):
 
         ingredients = []
         for i in range(len(ings)):
-            ingredients.append(tuple((ings[i].get(), float(amnts[i].get()))))
+            a = float(amnts[i].get())
+            m = meas[i].get()
+            ingredients.append(tuple((ings[i].get(), a, m)))
+
 
         meals[n].append(ingredients)
         print(meals)
@@ -109,6 +104,11 @@ def addIngredients(n):
         en['validatecommand'] = (en.register(isNum),'%P')
         en.grid(column=1, row=i.get(), padx=10, pady=1)
         amts.append(en)
+        ms = tk.StringVar()
+        en = ttk.Combobox(entryFrame, textvariable=ms, width=10)
+        en['values'] = [option.name for option in helper.Measurements]
+        en.grid(column=2, row=i.get(), padx=2, pady=1)
+        meas.append(en)
         i.set(i.get() + 1)
 
     def removeBox(i):
@@ -118,6 +118,9 @@ def addIngredients(n):
             en.destroy()
             en = amts[-1]
             amts.remove(en)
+            en.destroy()
+            en = meas[-1]
+            meas.remove(en)
             en.destroy()
             i.set(i.get() - 1)
 
@@ -135,10 +138,12 @@ def addIngredients(n):
     i.set(3)
     ings = []
     amts = []
+    meas = []
     ttk.Button(entryFrame, text="Add Ingredient", command=lambda i=i : addBox(i)).grid(column=0, row=0)
     ttk.Button(entryFrame, text="Remove Ingredient", command=lambda i=i: removeBox(i)).grid(column=1, row=0)
     ttk.Label(entryFrame, text="Ingredient:").grid(column=0, row=1)
     ttk.Label(entryFrame, text="Amount:").grid(column=1, row=1)
+    ttk.Label(entryFrame, text="Units:").grid(column=2, row=1)
     en = ttk.Entry(entryFrame)
     en.grid(column=0, row=2, padx=10, pady=1)
     ings.append(en)
@@ -146,10 +151,15 @@ def addIngredients(n):
     en['validatecommand'] = (en.register(isNum), '%P')
     en.grid(column=1, row=2, padx=10, pady=1)
     amts.append(en)
+    ms = tk.StringVar()
+    en = ttk.Combobox(entryFrame, textvariable=ms, width=10)
+    en['values'] = [option.name for option in helper.Measurements]
+    en.grid(column=2, row=2, padx=2, pady=1)
+    meas.append(en)
 
-    ttk.Checkbutton(window, text="Vegetarian", variable=vegVar).pack()
     ttk.Button(window, text="Cancel", command=Cancel).pack(side=RIGHT)
     ttk.Button(window, text="OK", command=lambda ings=ings, amnts=amts : OK(ings, amnts)).pack(side=RIGHT)
+    ttk.Checkbutton(window, text="Vegetarian", variable=vegVar).pack(side = RIGHT)
 
 # mealPlan creates a random meal plan from the saved meals.
 def mealPlan():
@@ -167,13 +177,23 @@ def mealPlan():
         for meal in final:
             try:
                 for i in range(len(meals[meal][1])):
-                    helper = meals[meal][1][i]
-                    ingredient = helper[0]
-                    amt = helper[1]
+                    help = meals[meal][1][i]
+                    ingredient = help[0]
+                    amt = help[1]
+                    meas = help[2]
+                    amt = float(helper.toCup(amt, meas))
+                    if meas != "POUND" and meas != "NONE":
+                        amt, meas = helper.fromCup(amt, meas)
+
+
+                    tmp = {meas : amt}
                     if ingredient in lst:
-                        lst[ingredient] = lst[ingredient] + amt
+                        if meas in lst[ingredient]:
+                            lst[ingredient][meas] = lst[ingredient][m] + amt
+                        else:
+                            lst[ingredient][meas] = amt
                     else:
-                        lst[ingredient] = amt
+                        lst[ingredient] = tmp
             except KeyError:
                 pass
 
@@ -181,11 +201,17 @@ def mealPlan():
         ttk.Label(grocer, text="Grocery List:").grid(column=0, row=0, columnspan=2)
 
         i = 1
-        for key, val in lst.items():
-            ttk.Label(grocer, text=key).grid(column=0, row=i)
-            ttk.Label(grocer, text=val).grid(column=1, row=i)
+        for ing, dic in lst.items():
+            ttk.Label(grocer, text=ing).grid(column=0, row=i)
+            j = 2
+            for meas, amt in dic.items():
+                ttk.Label(grocer, text=amt).grid(column=j, row=i)
+                j = j + 1
+                ttk.Label(grocer, text=meas).grid(column=j, row=i)
+                j = j + 1
             i = i + 1
 
+        print(meals)
         ttk.Button(grocer, text="OK", command=gOK).grid(column=0, row=i, columnspan=2)
 
     if(len(list(meals)) < 7):
