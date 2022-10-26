@@ -81,7 +81,7 @@ def addMeal():
 # Then it adds the meal to meals. It saves meals in Resources/meals.json
 def addIngredients(n):
 
-    def IsNum(S):
+    def isNum(S):
         return isFloat(S)
 
     def OK(ings, amnts):
@@ -143,7 +143,7 @@ def addIngredients(n):
     en.grid(column=0, row=2, padx=10, pady=1)
     ings.append(en)
     en = ttk.Entry(entryFrame, validate="key")
-    en['validatecommand'] = (en.register(IsNum), '%P')
+    en['validatecommand'] = (en.register(isNum), '%P')
     en.grid(column=1, row=2, padx=10, pady=1)
     amts.append(en)
 
