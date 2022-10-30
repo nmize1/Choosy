@@ -43,7 +43,7 @@ def settings():
         boolVeg.set(True)
     ttk.Checkbutton(window, text="Allow vegetarian meals on non-vegetarian days", variable=boolVeg, command=lambda boolVeg=boolVeg : vegCheck(boolVeg)).grid(column=5, row=0, columnspan=3)
 
-    days = list(days)
+    dys = list(days)
     for i in range(3):
         ttk.Label(window, text="|").grid(column=0, row=i+1)
         ttk.Label(window, text="|").grid(column=8, row=i+1, sticky=W)
@@ -51,8 +51,8 @@ def settings():
     for i in range(7):
         boolVar = BooleanVar()
         ttk.Label(window, text="-----").grid(column=i+1, row=1, sticky=W)
-        ttk.Checkbutton(window, text=days[i], variable=boolVar, command=lambda days=days, i=i, boolVar=boolVar : onCheck(days, i, boolVar)).grid(column=i+1, row=2, sticky=W)
-        if(days[days[i]]):
+        ttk.Checkbutton(window, text=dys[i], variable=boolVar, command=lambda days=days, i=i, boolVar=boolVar : onCheck(days, i, boolVar)).grid(column=i+1, row=2, sticky=W)
+        if(days[dys[i]]):
             boolVar.set(True)
         ttk.Label(window, text="-----").grid(column=i+1, row=3, sticky=W)
 
@@ -64,8 +64,8 @@ def settings():
     for i in range(7):
         rboolVar = BooleanVar()
         ttk.Label(window, text="-----").grid(column=i+1, row=10, sticky=W)
-        ttk.Checkbutton(window, text=days[i], variable=rboolVar, command=lambda days=days, i=i, rboolVar=rboolVar : ronCheck(days, i, rboolVar)).grid(column=i+1, row=11, sticky=W)
-        if(rdays[days[i]]):
+        ttk.Checkbutton(window, text=dys[i], variable=rboolVar, command=lambda days=days, i=i, rboolVar=rboolVar : ronCheck(days, i, rboolVar)).grid(column=i+1, row=11, sticky=W)
+        if(rdays[dys[i]]):
             rboolVar.set(True)
         ttk.Label(window, text="-----").grid(column=i+1, row=12, sticky=W)
 
@@ -300,6 +300,104 @@ def mealPlan():
     ttk.Button(window, text="OK", command=OK).grid(column=7, row=6)
     ttk.Button(window, text="Grocery List", command=gList).grid(column=6, row=6)
 
+def editMeal():
+    def isNum(S):
+        return helper.isFloat(S)
+
+    def OK(ings, amnts):
+        ingredients = []
+        for i in range(len(ings)):
+            a = float(amnts[i].get())
+            m = meas[i].get()
+            ingredients.append(tuple((ings[i].get(), a, m)))
+
+        m = helper.Meal(selectedMeal.get(), ingredients, vegVar.get())
+        for mls in meals:
+            if mls.name == m.name:
+                meals.remove(mls)
+
+        print(m.recipe)
+        meals.append(m)
+        refreshMeals()
+        window.destroy()
+
+    def Cancel():
+        window.destroy()
+
+    def addBox(i):
+        en = ttk.Entry(entryFrame)
+        en.grid(column=0, row=i.get(), padx=10, pady=1)
+        ings.append(en)
+        en = ttk.Entry(entryFrame, validate="key")
+        en['validatecommand'] = (en.register(isNum),'%P')
+        en.grid(column=1, row=i.get(), padx=10, pady=1)
+        amts.append(en)
+        ms = tk.StringVar()
+        en = ttk.Combobox(entryFrame, textvariable=ms, width=10)
+        en['values'] = [option.name for option in helper.Measurements]
+        en.grid(column=2, row=i.get(), padx=2, pady=1)
+        meas.append(en)
+        i.set(i.get() + 1)
+
+    def removeBox(i):
+        if i.get() > 3:
+            en = ings[-1]
+            ings.remove(en)
+            en.destroy()
+            en = amts[-1]
+            amts.remove(en)
+            en.destroy()
+            en = meas[-1]
+            meas.remove(en)
+            en.destroy()
+            i.set(i.get() - 1)
+
+
+    window = tk.Toplevel(root)
+    label = "Shopping list for:"
+    ttk.Label(window, text=label).pack()
+    selectedMeal = ttk.Combobox(window, width=10)
+    selectedMeal['values'] = [m.name for m in meals]
+    selectedMeal.pack()
+
+    entryFrame = ttk.Frame(window)
+    entryFrame.pack()
+
+    i = IntVar()
+    vegVar = BooleanVar()
+
+    i.set(3)
+    ings = []
+    amts = []
+    meas = []
+    ttk.Button(entryFrame, text="Add Ingredient", command=lambda i=i : addBox(i)).grid(column=0, row=0)
+    ttk.Button(entryFrame, text="Remove Ingredient", command=lambda i=i: removeBox(i)).grid(column=1, row=0)
+    ttk.Label(entryFrame, text="Ingredient:").grid(column=0, row=1)
+    ttk.Label(entryFrame, text="Amount:").grid(column=1, row=1)
+    ttk.Label(entryFrame, text="Units:").grid(column=2, row=1)
+    en = ttk.Entry(entryFrame)
+    en.grid(column=0, row=2, padx=10, pady=1)
+    ings.append(en)
+    en = ttk.Entry(entryFrame, validate="key")
+    en['validatecommand'] = (en.register(isNum), '%P')
+    en.grid(column=1, row=2, padx=10, pady=1)
+    amts.append(en)
+    ms = tk.StringVar()
+    en = ttk.Combobox(entryFrame, textvariable=ms, width=10)
+    en['values'] = [option.name for option in helper.Measurements]
+    en.grid(column=2, row=2, padx=2, pady=1)
+    meas.append(en)
+
+    ttk.Button(window, text="Cancel", command=Cancel).pack(side=RIGHT)
+    ttk.Button(window, text="OK", command=lambda ings=ings, amnts=amts : OK(ings, amnts)).pack(side=RIGHT)
+    ttk.Checkbutton(window, text="Vegetarian", variable=vegVar).pack(side = RIGHT)
+
+def refreshMeals():
+    os.remove("Resources/meals.json")
+    with open("Resources/meals.json", "w") as outfile:
+        for m in meals:
+            m.dump(outfile)
+            outfile.write('\n')
 
 # Check whether meals.json exists and options.json exists
 try:
@@ -341,6 +439,7 @@ root.rowconfigure(0, weight=1)
 name = tk.StringVar()
 ttk.Entry(mainframe, textvariable=name).grid(column=1, row=2, sticky=N)
 ttk.Button(mainframe, text="Add Meal", command=addMeal).grid(column=2, row=2, sticky=N)
+ttk.Button(mainframe, text="Edit Meals", command=editMeal).grid(column=3, row=2, sticky=N)
 ttk.Button(mainframe, text="Generate Meal Plan", command=mealPlan).grid(column=1, row=3, sticky=N)
 ttk.Button(mainframe, text="Settings", command=settings).grid(column=2, row=3, sticky=N)
 
