@@ -10,15 +10,16 @@ stngs = {"AllowVeg": False}
 days = {"SUNDAY" : False, "MONDAY" : False, "TUESDAY" : False, "WEDNESDAY" : False, "THURSDAY" : False, "FRIDAY" : False, "SATURDAY" : False}
 rdays = {"SUNDAY" : False, "MONDAY" : False, "TUESDAY" : False, "WEDNESDAY" : False, "THURSDAY" : False, "FRIDAY" : False, "SATURDAY" : False}
 meals = []
+restaurants = []
 
 # Settings maintains options about the days.
 # It saves these settings in Resources/options.json
 def settings():
-    def onCheck(days, i, boolVar):
-        days[days[i]] = boolVar.get()
+    def onCheck(dys, i, boolVar):
+        days[dys[i]] = boolVar.get()
 
-    def ronCheck(days, i, rboolVar):
-        rdays[days[i]] = rboolVar.get()
+    def ronCheck(dys, i, rboolVar):
+        rdays[dys[i]] = rboolVar.get()
 
     def vegCheck(boolVeg):
         stngs["AllowVeg"] = boolVeg.get()
@@ -51,7 +52,7 @@ def settings():
     for i in range(7):
         boolVar = BooleanVar()
         ttk.Label(window, text="-----").grid(column=i+1, row=1, sticky=W)
-        ttk.Checkbutton(window, text=dys[i], variable=boolVar, command=lambda days=days, i=i, boolVar=boolVar : onCheck(days, i, boolVar)).grid(column=i+1, row=2, sticky=W)
+        ttk.Checkbutton(window, text=dys[i], variable=boolVar, command=lambda days=days, i=i, boolVar=boolVar : onCheck(dys, i, boolVar)).grid(column=i+1, row=2, sticky=W)
         if(days[dys[i]]):
             boolVar.set(True)
         ttk.Label(window, text="-----").grid(column=i+1, row=3, sticky=W)
@@ -64,13 +65,30 @@ def settings():
     for i in range(7):
         rboolVar = BooleanVar()
         ttk.Label(window, text="-----").grid(column=i+1, row=10, sticky=W)
-        ttk.Checkbutton(window, text=dys[i], variable=rboolVar, command=lambda days=days, i=i, rboolVar=rboolVar : ronCheck(days, i, rboolVar)).grid(column=i+1, row=11, sticky=W)
+        ttk.Checkbutton(window, text=dys[i], variable=rboolVar, command=lambda days=days, i=i, rboolVar=rboolVar : ronCheck(dys, i, rboolVar)).grid(column=i+1, row=11, sticky=W)
         if(rdays[dys[i]]):
             rboolVar.set(True)
         ttk.Label(window, text="-----").grid(column=i+1, row=12, sticky=W)
 
     ttk.Button(window, text="OK", command=OK).grid(column=6, row=13)
     ttk.Button(window, text="Apply", command=Apply).grid(column=7, row=13, sticky=W)
+
+# addRest adds restaurants to restaurants list for restaurant days
+def addRest():
+    def OK():
+        error.destroy()
+
+    n = name.get()
+    if n == "":
+        error = tk.Toplevel(root)
+        ttk.Label(error, text="Restaurant name cannot be blank.").pack()
+        ttk.Button(error, text="OK", command=OK).pack()
+    else:
+        name.set("")
+        restaurants.append(n)
+        with open("Resources/restaurants.json", "w") as outfile:
+            json.dump(restaurants, outfile)
+            outfile.write('\n')
 
 # addMeal makes sure there's a name in the text box before allowing ingredients to be added.
 def addMeal():
@@ -287,6 +305,11 @@ def mealPlan():
             d = mls[m]
             m = m + 1
 
+        print(rdays[day])
+        if rdays[day]:
+            r = random.choice(restaurants)
+            d = helper.Meal(r, [], False)
+
         final.append(d)
 
         ttk.Label(window, text="-----").grid(column=i+1, row=1)
@@ -414,6 +437,16 @@ except IOError as error:
     print("Meals file doesn't exist. Will create when meals are saved.")
 
 try:
+    with open('Resources/restaurants.json', 'r') as openfile:
+        file = [json.loads(line) for line in openfile]
+        for f in file:
+            restaurants.append(f)
+
+except IOError as error:
+    pass
+    print("Meals file doesn't exist. Will create when meals are saved.")
+
+try:
     with open('Resources/options.json', 'r') as openfile:
         opts = [json.loads(line) for line in openfile]
         days = opts[0]
@@ -441,8 +474,9 @@ root.rowconfigure(0, weight=1)
 name = tk.StringVar()
 ttk.Entry(mainframe, textvariable=name).grid(column=1, row=2, sticky=N)
 ttk.Button(mainframe, text="Add Meal", command=addMeal).grid(column=2, row=2, sticky=N)
-ttk.Button(mainframe, text="Edit Meals", command=editMeal).grid(column=3, row=2, sticky=N)
+ttk.Button(mainframe, text="Add Restaurant", command=addRest).grid(column=3, row=2, sticky=N)
+ttk.Button(mainframe, text="Edit Meals", command=editMeal).grid(column=2, row=3, sticky=N)
 ttk.Button(mainframe, text="Generate Meal Plan", command=mealPlan).grid(column=1, row=3, sticky=N)
-ttk.Button(mainframe, text="Settings", command=settings).grid(column=2, row=3, sticky=N)
+ttk.Button(mainframe, text="Settings", command=settings).grid(column=3, row=3, sticky=N)
 
 root.mainloop()

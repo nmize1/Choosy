@@ -6,7 +6,7 @@ This is a prototype for a possible web version later.
 
 Additional planned features:
 - [x] Grocery List with measurements
-- [ ] Restuarant picker
+- [x] Restuarant picker
 
 # Usage
 
