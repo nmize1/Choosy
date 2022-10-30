@@ -300,6 +300,7 @@ def mealPlan():
     ttk.Button(window, text="OK", command=OK).grid(column=7, row=6)
     ttk.Button(window, text="Grocery List", command=gList).grid(column=6, row=6)
 
+# editMeal handles replacing meal's recipes by removing the meal and replacing it with a new one
 def editMeal():
     def isNum(S):
         return helper.isFloat(S)
@@ -392,6 +393,7 @@ def editMeal():
     ttk.Button(window, text="OK", command=lambda ings=ings, amnts=amts : OK(ings, amnts)).pack(side=RIGHT)
     ttk.Checkbutton(window, text="Vegetarian", variable=vegVar).pack(side = RIGHT)
 
+# rewrite meals.json after a change to a meal
 def refreshMeals():
     os.remove("Resources/meals.json")
     with open("Resources/meals.json", "w") as outfile:
