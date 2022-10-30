@@ -5,11 +5,10 @@ Tool to create meal plans and grocery lists for the meals on the plans.
 This is a prototype for a possible web version later.
 
 Additional planned features:
-      Restaurant Picker, choose whether a day is an eat out day in settings (similarly to vegetarian days)
-      and then choose from a list of restaurants instead of meals. Perhaps with some kind of budget level.
-      Measurements for ingredients
+[x] Grocery List with measurements
+[ ] Restuarant picker
 
-# Use
+# Usage
 
 Run choosy.py or download choosy.exe (not yet released). Make sure choosy.py is in the same folder as the Resources folder.
 
