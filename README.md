@@ -5,8 +5,8 @@ Tool to create meal plans and grocery lists for the meals on the plans.
 This is a prototype for a possible web version later.
 
 Additional planned features:
-[x] Grocery List with measurements
-[ ] Restuarant picker
+- [x] Grocery List with measurements
+- [ ] Restuarant picker
 
 # Usage
 
