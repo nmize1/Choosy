@@ -1,4 +1,18 @@
 from enum import Enum
+import json
+
+class Meal:
+    def __init__(self, name, recipe, vegetarian):
+        self.name = name
+        self.recipe = recipe
+        self.vegetarian = vegetarian
+
+    def dump(self, outfile):
+        json.dump(self.__dict__, outfile)
+
+class Recipe:
+    def __init__(self, ingredients):
+        self.ingredients = ingredients
 
 #helper function for number validation
 def isFloat(n):
@@ -47,7 +61,6 @@ def toCup(amt, unit):
             return (amt * 16)
 
         case _:
-            print("_")
             return amt
 
 def fromCup(amt, unit):

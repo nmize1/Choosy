@@ -6,18 +6,16 @@ import random
 import json
 import Resources.helper as helper
 
-stngs = {"AllowVeg": False}
+days = {"SUNDAY" : False, "MONDAY" : False, "TUESDAY" : False, "WEDNESDAY" : False, "THURSDAY" : False, "FRIDAY" : False, "SATURDAY" : False}
+rdays = {"SUNDAY" : False, "MONDAY" : False, "TUESDAY" : False, "WEDNESDAY" : False, "THURSDAY" : False, "FRIDAY" : False, "SATURDAY" : False}
+meals = []
 
-#DAYS = {DAY : VegetarianState}
-DAYS = {"SUNDAY" : False, "MONDAY" : False, "TUESDAY" : False, "WEDNESDAY" : False, "THURSDAY" : False, "FRIDAY" : False, "SATURDAY" : False}
-#meals = {Meal name : [VegetarianMealState, [[Ingredient 1, Amount of Ingredient 1], [Ingredient 2, Amount of Ingredient 2], ..., [Ingredient n, Amount of Ingredient n]]]}
-meals = {}
-
-# Settings maintains options about the days.
-# It saves these settings in Resources/options.json
 def settings():
     def onCheck(days, i, boolVar):
-        DAYS[days[i]] = boolVar.get()
+        days[days[i]] = boolVar.get()
+
+    def ronCheck(days, i, rboolVar):
+        rdays[days[i]] = rboolVar.get()
 
     def vegCheck(boolVeg):
         stngs["AllowVeg"] = boolVeg.get()
@@ -28,19 +26,21 @@ def settings():
 
     def Apply():
         with open("Resources/options.json", "w") as outfile:
-            json.dump(DAYS, outfile)
+            json.dump(days, outfile)
+            outfile.write('\n')
+            json.dump(rdays, outfile)
             outfile.write('\n')
             json.dump(stngs, outfile)
 
     window = tk.Toplevel(root)
-    ttk.Label(window, text="Vegetarian Days:").grid(column=1, row=0, columnspan=2)
+    ttk.Label(window, text="Vegetarian days:").grid(column=1, row=0, columnspan=2)
 
     boolVeg = BooleanVar()
     if stngs["AllowVeg"]:
         boolVeg.set(True)
     ttk.Checkbutton(window, text="Allow vegetarian meals on non-vegetarian days", variable=boolVeg, command=lambda boolVeg=boolVeg : vegCheck(boolVeg)).grid(column=5, row=0, columnspan=3)
 
-    days = list(DAYS)
+    days = list(days)
     for i in range(3):
         ttk.Label(window, text="|").grid(column=0, row=i+1)
         ttk.Label(window, text="|").grid(column=8, row=i+1, sticky=W)
@@ -49,12 +49,25 @@ def settings():
         boolVar = BooleanVar()
         ttk.Label(window, text="-----").grid(column=i+1, row=1, sticky=W)
         ttk.Checkbutton(window, text=days[i], variable=boolVar, command=lambda days=days, i=i, boolVar=boolVar : onCheck(days, i, boolVar)).grid(column=i+1, row=2, sticky=W)
-        if(DAYS[days[i]]):
+        if(days[days[i]]):
             boolVar.set(True)
         ttk.Label(window, text="-----").grid(column=i+1, row=3, sticky=W)
 
-    ttk.Button(window, text="OK", command=OK).grid(column=6, row=9)
-    ttk.Button(window, text="Apply", command=Apply).grid(column=7, row=9, sticky=W)
+    ttk.Label(window, text="Restaurant days:").grid(column=1, row=9, columnspan=2)
+    for i in range(3):
+        ttk.Label(window, text="|").grid(column=0, row=9+i+1)
+        ttk.Label(window, text="|").grid(column=8, row=9+i+1, sticky=W)
+
+    for i in range(7):
+        rboolVar = BooleanVar()
+        ttk.Label(window, text="-----").grid(column=i+1, row=10, sticky=W)
+        ttk.Checkbutton(window, text=days[i], variable=rboolVar, command=lambda days=days, i=i, rboolVar=rboolVar : ronCheck(days, i, rboolVar)).grid(column=i+1, row=11, sticky=W)
+        if(rdays[days[i]]):
+            rboolVar.set(True)
+        ttk.Label(window, text="-----").grid(column=i+1, row=12, sticky=W)
+
+    ttk.Button(window, text="OK", command=OK).grid(column=6, row=13)
+    ttk.Button(window, text="Apply", command=Apply).grid(column=7, row=13, sticky=W)
 
 # addMeal makes sure there's a name in the text box before allowing ingredients to be added.
 def addMeal():
@@ -77,20 +90,18 @@ def addIngredients(n):
         return helper.isFloat(S)
 
     def OK(ings, amnts):
-        meals[n] = []
-        meals[n].append(vegVar.get())
-
         ingredients = []
         for i in range(len(ings)):
             a = float(amnts[i].get())
             m = meas[i].get()
             ingredients.append(tuple((ings[i].get(), a, m)))
 
-
-        meals[n].append(ingredients)
-        print(meals)
+        m = helper.Meal(n, ingredients, vegVar.get())
+        meals.append(m)
         with open("Resources/meals.json", "w") as outfile:
-            json.dump(meals, outfile)
+            for m in meals:
+                m.dump(outfile)
+                outfile.write('\n')
         window.destroy()
 
     def Cancel():
@@ -176,11 +187,12 @@ def mealPlan():
 
         for meal in final:
             try:
-                for i in range(len(meals[meal][1])):
-                    help = meals[meal][1][i]
-                    ingredient = help[0]
-                    amt = help[1]
-                    meas = help[2]
+                ings = meal.recipe
+                for i in ings:
+                    print(i)
+                    ingredient = i[0]
+                    amt = i[1]
+                    meas = i[2]
                     amt = float(helper.toCup(amt, meas))
                     if meas != "POUND" and meas != "NONE":
                         amt, meas = helper.fromCup(amt, meas)
@@ -188,12 +200,16 @@ def mealPlan():
 
                     tmp = {meas : amt}
                     if ingredient in lst:
+                        print(ingredient)
                         if meas in lst[ingredient]:
-                            lst[ingredient][meas] = lst[ingredient][m] + amt
+                            d = lst[ingredient]
+                            d[meas] = d[meas] + amt
                         else:
                             lst[ingredient][meas] = amt
                     else:
                         lst[ingredient] = tmp
+
+                    print(lst[ingredient][meas])
             except KeyError:
                 pass
 
@@ -211,7 +227,6 @@ def mealPlan():
                 j = j + 1
             i = i + 1
 
-        print(meals)
         ttk.Button(grocer, text="OK", command=gOK).grid(column=0, row=i, columnspan=2)
 
     if(len(list(meals)) < 7):
@@ -223,12 +238,12 @@ def mealPlan():
     rgmls = []
     numVeg = 0
 
-    for day, veg in DAYS.items():
+    for day, veg in days.items():
         if veg:
             numVeg = numVeg + 1
 
-    for m, v in meals.items():
-        if v[0]:
+    for m in meals:
+        if m.vegetarian:
             vgmls.append(m)
         else:
             rgmls.append(m)
@@ -258,13 +273,13 @@ def mealPlan():
         mls = mls + vmls
 
     final = []
-    for day, veg in DAYS.items():
+    for day, veg in days.items():
         if veg:
             try:
                 d = vmls[v]
                 v = v + 1
             except IndexError:
-                d = "No Vegetarian Meals"
+                d = helper.Meal("No Vegetarian Meals", [], True)
         else:
             d = mls[m]
             m = m + 1
@@ -274,7 +289,7 @@ def mealPlan():
         ttk.Label(window, text="-----").grid(column=i+1, row=1)
         ttk.Label(window, text=day).grid(column=i+1, row=2)
         ttk.Label(window, text="-----").grid(column=i+1, row=3)
-        ttk.Label(window, text=d).grid(column=i+1, row=4)
+        ttk.Label(window, text=d.name).grid(column=i+1, row=4)
         ttk.Label(window, text="-----").grid(column=i+1, row=5)
 
         i = i + 1
@@ -282,10 +297,15 @@ def mealPlan():
     ttk.Button(window, text="OK", command=OK).grid(column=7, row=6)
     ttk.Button(window, text="Grocery List", command=gList).grid(column=6, row=6)
 
+
 # Check whether meals.json exists and options.json exists
 try:
     with open('Resources/meals.json', 'r') as openfile:
-        meals = json.load(openfile)
+        file = [json.loads(line) for line in openfile]
+        for f in file:
+            m = helper.Meal(f["name"], f["recipe"], f["vegetarian"])
+            meals.append(m)
+
 except IOError as error:
     pass
     print("Meals file doesn't exist. Will create when meals are saved.")
@@ -293,8 +313,9 @@ except IOError as error:
 try:
     with open('Resources/options.json', 'r') as openfile:
         opts = [json.loads(line) for line in openfile]
-        DAYS = opts[0]
-        stngs = opts[1]
+        days = opts[0]
+        rdays = opts[1]
+        stngs = opts[2]
 except IOError as error:
     pass
     print("Options file doesn't exist. Will create when options are applied.")
