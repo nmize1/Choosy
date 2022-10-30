@@ -6,10 +6,13 @@ import random
 import json
 import Resources.helper as helper
 
+stngs = {"AllowVeg": False}
 days = {"SUNDAY" : False, "MONDAY" : False, "TUESDAY" : False, "WEDNESDAY" : False, "THURSDAY" : False, "FRIDAY" : False, "SATURDAY" : False}
 rdays = {"SUNDAY" : False, "MONDAY" : False, "TUESDAY" : False, "WEDNESDAY" : False, "THURSDAY" : False, "FRIDAY" : False, "SATURDAY" : False}
 meals = []
 
+# Settings maintains options about the days.
+# It saves these settings in Resources/options.json
 def settings():
     def onCheck(days, i, boolVar):
         days[days[i]] = boolVar.get()
